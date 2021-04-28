@@ -112,7 +112,7 @@ app.get(
     }
   },
   (req, res) => {
-    res.clearCookie("jwt");
+    // res.clearCookie("jwt");
     res.send("<p>Hey! coder 👨‍💻</p>");
   }
 );

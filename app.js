@@ -59,55 +59,68 @@ app.get("/", (req, res) => {
 
 // Get the user data
 app.post("/users/signup", async (req, res) => {
-  const { firstName, lastName, email } = req.body;
+  try {
+    const { firstName, lastName, email } = req.body;
 
-  const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-  if (user) {
-    return res.send("<p>Duplicate data</p>");
+    if (user) {
+      return res.send("<p>Duplicate data</p>");
+    }
+
+    const token = uuidv4();
+    const newUser = new User({ firstName, lastName, email, token });
+
+    // Mail service
+    await mailService(newUser);
+
+    newUser.save();
+
+    return res.send("<p>Please check mail</p>");
+  } catch (err) {
+    return res.send("<p>Unable to sign up</p>");
   }
-
-  const token = uuidv4();
-  const newUser = new User({ firstName, lastName, email, token });
-
-  // Mail service
-  await mailService(newUser);
-
-  newUser.save();
-  return res.send("<p>Please check mail</p>");
 });
 
 // Verify user
 app.get("/users/verify", async (req, res) => {
-  const { email, token } = req.query;
+  try {
+    const { email, token } = req.query;
 
-  await User.findOne({ email, token })
-    .then((doc) => {
-      res.cookie("jwt", jwt.sign({ id: doc._id }, process.env.JWT_SECRET), {
-        expire: new Date() + 9999,
-        httpOnly: true,
-      });
-      res.redirect("/users/message");
-    })
-    .catch((err) => {
-      return res.send("<p>Unable to verify</p>");
+    const user = await User.findOne({ email, token });
+
+    if (!user) {
+      return res.send("<p>You haven't registered yet</p>");
+    }
+
+    res.cookie("jwt", jwt.sign({ id: user._id }, process.env.JWT_SECRET), {
+      expire: new Date() + 9999,
+      httpOnly: true,
     });
+
+    res.redirect("/users/message");
+  } catch (err) {
+    return res.send("<p>Unable to verify</p>");
+  }
 });
 
 // Protected route
 app.get(
   "/users/message",
-  // Auth middleware 
+  // Auth middleware
   async (req, res, next) => {
-    if (req.cookies.jwt || "") {
-      const decoded = jwt.verify(req.cookies.jwt, process.env.JWT_SECRET);
-      await User.findById(decoded.id)
-        .then((doc) => {
-          next();
-        })
-        .catch((err) => res.send("<p>Unauthorized access</p>"));
-    } else {
-      return res.send("<p>Authorization token not found</p>");
+    try {
+      if (req.cookies.jwt || "") {
+        const decoded = jwt.verify(req.cookies.jwt, process.env.JWT_SECRET);
+
+        req.user = await User.findById(decoded.id);
+
+        next();
+      } else {
+        return res.send("<p>Authorization token not found</p>");
+      }
+    } catch (err) {
+      return res.send("<p>Unauthorized access</p>");
     }
   },
   (req, res) => {

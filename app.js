@@ -74,7 +74,7 @@ app.post("/users/signup", async (req, res) => {
   await mailService(newUser);
 
   newUser.save();
-  res.send("<p>Please check mail</p>");
+  return res.send("<p>Please check mail</p>");
 });
 
 // Verify user
@@ -95,25 +95,29 @@ app.get("/users/verify", async (req, res) => {
       );
       res.redirect("/users/message");
     })
-    .catch((err) => res.send("<p>Unable to verify</p>"));
+    .catch((err) => {
+      return res.send("<p>Unable to verify</p>");
+    });
 });
 
 // Protected route
 app.get(
   "/users/message",
   async (req, res, next) => {
-    if (req.cookies.jwt !== null) {
+    if (req.cookies.jwt || "") {
       const decoded = jwt.verify(req.cookies.jwt, process.env.JWT_SECRET);
       await User.findById(decoded.id)
         .then((doc) => {
           next();
         })
         .catch((err) => res.send("<p>Unauthorized access</p>"));
+    } else {
+      return res.send("<p>Authorization token not found</p>");
     }
   },
   (req, res) => {
     // res.clearCookie("jwt");
-    res.send("<p>Hey! coder 👨‍💻</p>");
+    return res.send("<p>Hey! coder 👨‍💻</p>");
   }
 );
 

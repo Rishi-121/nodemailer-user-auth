@@ -21,9 +21,6 @@ const mailService = (user) => {
       html: `
         <!DOCTYPE html>
         <html lang="en">
-        <head>
-          <title>Verification page</title>
-        </head>
         <body>
             <h3>Hey ${firstName} ${lastName},</h3>
             <p> 

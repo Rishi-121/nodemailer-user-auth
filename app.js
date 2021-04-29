@@ -97,6 +97,7 @@ app.get("/users/verify", async (req, res) => {
 // Protected route
 app.get(
   "/users/message",
+  // Auth middleware 
   async (req, res, next) => {
     if (req.cookies.jwt || "") {
       const decoded = jwt.verify(req.cookies.jwt, process.env.JWT_SECRET);

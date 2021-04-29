@@ -97,7 +97,7 @@ app.get("/users/verify", async (req, res) => {
       expire: new Date() + 9999,
       httpOnly: true,
     });
-
+    
     res.redirect("/users/message");
   } catch (err) {
     return res.send("<p>Unable to verify</p>");
@@ -110,15 +110,9 @@ app.get(
   // Auth middleware
   async (req, res, next) => {
     try {
-      if (req.cookies.jwt || "") {
-        const decoded = jwt.verify(req.cookies.jwt, process.env.JWT_SECRET);
-
-        req.user = await User.findById(decoded.id);
-
-        next();
-      } else {
-        return res.send("<p>Authorization token not found</p>");
-      }
+      const decoded = jwt.verify(req.cookies.jwt, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id);
+      next();
     } catch (err) {
       return res.send("<p>Unauthorized access</p>");
     }
@@ -128,7 +122,7 @@ app.get(
     return res.send("<p>Hey! coder 👨‍💻</p>");
   }
 );
-
+ 
 app.listen(
   process.env.PORT,
   console.log(`Server running on port ${process.env.PORT}`)

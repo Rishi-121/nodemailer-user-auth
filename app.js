@@ -83,16 +83,10 @@ app.get("/users/verify", async (req, res) => {
 
   await User.findOne({ email, token })
     .then((doc) => {
-      res.cookie(
-        "jwt",
-        jwt.sign({ id: doc._id }, process.env.JWT_SECRET, {
-          expiresIn: "7 days",
-        }),
-        {
-          expire: new Date() + 9999,
-          httpOnly: true,
-        }
-      );
+      res.cookie("jwt", jwt.sign({ id: doc._id }, process.env.JWT_SECRET), {
+        expire: new Date() + 9999,
+        httpOnly: true,
+      });
       res.redirect("/users/message");
     })
     .catch((err) => {
